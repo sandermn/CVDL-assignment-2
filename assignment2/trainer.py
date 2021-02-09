@@ -71,6 +71,11 @@ class BaseTrainer:
             loss={},
             accuracy={}
         )
+                
+        # variables for early stopping
+        counter = 0
+        times = 50
+        lowest_val_loss = float('inf')
 
         global_step = 0
         for epoch in range(num_epochs):
@@ -88,5 +93,12 @@ class BaseTrainer:
                     val_history["loss"][global_step] = val_loss
                     val_history["accuracy"][global_step] = accuracy_val
                     # TODO: Implement early stopping (copy from last assignment)
+                    counter += 1
+                    if(val_history["loss"][global_step] < lowest_val_loss):
+                        lowest_val_loss = val_history["loss"][global_step]
+                        counter = 0
+                    if(counter > times):
+                        print(f'Training stopped after {epoch} epochs')
+                        return train_history, val_history
                 global_step += 1
         return train_history, val_history
