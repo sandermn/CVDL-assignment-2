@@ -14,6 +14,9 @@ def pre_process_images(X: np.ndarray):
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
     # TODO implement this function (Task 2a)
+
+    X = (X - X.mean())/X.std()
+    X = np.insert(X, -1, 1, axis=1)
     return X
 
 
@@ -46,8 +49,9 @@ class SoftmaxModel:
         # Always reset random seed before weight init to get comparable results.
         np.random.seed(1)
         # Define number of input nodes
-        self.I = None
+        self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
+        self.hidden_layer_ouput = None
 
         # Define number of output nodes
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
@@ -75,7 +79,10 @@ class SoftmaxModel:
         # TODO implement this function (Task 2b)
         # HINT: For peforming the backward pass, you can save intermediate activations in varialbes in the forward pass.
         # such as self.hidden_layer_ouput = ...
-        return None
+        y = np.divide(np.exp(X.dot(self.w)),np.transpose(np.array([np.sum(np.exp(X.dot(self.w)), axis=1)])))
+        self.hidden_layer_ouput = y
+        return y
+
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
