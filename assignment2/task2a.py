@@ -16,7 +16,7 @@ def pre_process_images(X: np.ndarray):
     # TODO implement this function (Task 2a)
 
     X = (X - X.mean())/X.std()
-    X = np.insert(X, -1, 1, axis=1)
+    X = np.insert(X, 784, 1, axis=1)
     return X
 
 
@@ -79,8 +79,9 @@ class SoftmaxModel:
         # TODO implement this function (Task 2b)
         # HINT: For peforming the backward pass, you can save intermediate activations in varialbes in the forward pass.
         # such as self.hidden_layer_ouput = ...
-        y = np.divide(np.exp(X.dot(self.w)),np.transpose(np.array([np.sum(np.exp(X.dot(self.w)), axis=1)])))
-        self.hidden_layer_ouput = y
+        self.hidden_layer_ouput = np.divide(np.exp(X.dot(self.ws[0])),np.transpose(np.array([np.sum(np.exp(X.dot(self.ws[0])), axis=1)])))
+        y = np.divide(np.exp(self.hidden_layer_ouput.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput.dot(self.ws[1])), axis=1)])))
+        #print(y)
         return y
 
 
@@ -100,10 +101,14 @@ class SoftmaxModel:
         # A list of gradients.
         # For example, self.grads[0] will be the gradient for the first hidden layer
         self.grads = []
+        self.grads.append(np.zeros((785, 64)))
+        self.grads.append(np.zeros((64, 10)))
 
-        for grad, w in zip(self.grads, self.ws):
+        for i, (grad, w) in enumerate(zip(self.grads, self.ws)):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
+            self.grads[i] = (1 / targets.shape[0])*(np.transpose(X).dot(-(targets - outputs)))
+
 
     def zero_grad(self) -> None:
         self.grads = [None for i in range(len(self.ws))]
@@ -147,6 +152,7 @@ def gradient_approximation_test(
                 # Actual gradient
                 logits = model.forward(X)
                 model.backward(X, logits, Y)
+                print(f'lidx={layer_idx}, i={i}, j={j}')
                 difference = gradient_approximation - \
                     model.grads[layer_idx][i, j]
                 assert abs(difference) <= epsilon**2,\
