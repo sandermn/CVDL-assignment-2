@@ -32,7 +32,7 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     # TODO: Implement this function (copy from last assignment)
 
-    cel =  np.sum((-np.sum(targets * np.log(outputs), axis=1)))
+    cel =  (-np.sum(targets * np.log(outputs), axis=1))
     cel = (1 / targets.shape[0]) * np.sum(cel)
     return cel
 
@@ -79,9 +79,12 @@ class SoftmaxModel:
         # TODO implement this function (Task 2b)
         # HINT: For peforming the backward pass, you can save intermediate activations in varialbes in the forward pass.
         # such as self.hidden_layer_ouput = ...
-        self.hidden_layer_ouput = np.divide(np.exp(X.dot(self.ws[0])),np.transpose(np.array([np.sum(np.exp(X.dot(self.ws[0])), axis=1)])))
-        y = np.divide(np.exp(self.hidden_layer_ouput.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput.dot(self.ws[1])), axis=1)])))
-        #print(y)
+
+        # sigmoid activation for the first layers
+        self.hidden_layer_ouput = 1/(1+np.exp(-self.ws[0].T.dot(X.T)))
+
+        # softmax activation for the last hidden layer
+        y = np.divide(np.exp(self.hidden_layer_ouput.T.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput.T.dot(self.ws[1])), axis=1)])))
         return y
 
 
