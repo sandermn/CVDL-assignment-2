@@ -51,7 +51,7 @@ class SoftmaxModel:
         # Define number of input nodes
         self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
-        self.hidden_layer_ouput = None
+        self.hidden_layer_ouput = [None, None]
 
         # Define number of output nodes
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
@@ -81,11 +81,24 @@ class SoftmaxModel:
         # such as self.hidden_layer_ouput = ...
 
         # sigmoid activation for the first layers
-        self.hidden_layer_ouput = 1/(1+np.exp(-self.ws[0].T.dot(X.T)))
+        self.hidden_layer_ouput[0] = 1/(1+np.exp(np.transpose(-self.ws[0]).dot(X.T)))
+        #self.hidden_layer_ouput[0] = 1/(1+np.exp(-X.dot(self.ws[0])))
+        #print(f' HLO_0 = {self.hidden_layer_ouput[0].shape}')
 
         # softmax activation for the last hidden layer
-        y = np.divide(np.exp(self.hidden_layer_ouput.T.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput.T.dot(self.ws[1])), axis=1)])))
-        return y
+        self.hidden_layer_ouput[1] = np.divide(np.exp(self.hidden_layer_ouput[0].T.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput[0].T.dot(self.ws[1])), axis=1)])))
+        
+        #print(self.ws[1].shape, self.hidden_layer_ouput[0].shape)
+
+        #zk = self.hidden_layer_ouput[0].T.dot(self.ws[1])
+        #self.hidden_layer_ouput[1] = (np.exp(zk) / np.sum(zk))
+        #print(self.hidden_layer_ouput[1].shape)
+
+        #print(f'HLO_1 = {self.hidden_layer_ouput[1].shape}')
+
+
+
+        return self.hidden_layer_ouput[1]
 
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
@@ -103,6 +116,7 @@ class SoftmaxModel:
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         # A list of gradients.
         # For example, self.grads[0] will be the gradient for the first hidden layer
+        """
         self.grads = []
         self.grads.append(np.zeros((785, 64)))
         self.grads.append(np.zeros((64, 10)))
@@ -110,7 +124,25 @@ class SoftmaxModel:
         for i, (grad, w) in enumerate(zip(self.grads, self.ws)):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
-            self.grads[i] = (1 / targets.shape[0])*(np.transpose(X).dot(-(targets - outputs)))
+        
+        self.grads[1] = (1 / targets.shape[0])*(np.transpose(self.hidden_layer_ouput).dot(-(targets - outputs)))
+        self.grads[0] = (1 / targets.shape[0])*(np.transpose(X).dot(-(targets - outputs)))
+        """
+        samples = targets.shape[0]
+        w_ji = self.ws[0]
+        w_kj = self.ws[1]
+        zj = X.dot(w_ji)
+        dk = -(targets-outputs)
+        fderv = (1/(1+np.exp(-zj))*(1-1/(1+np.exp(-zj))))
+
+        #print(self.hidden_layer_ouput[1].T.shape, dk.shape)
+        
+        self.grads[1] = 1/samples*(self.hidden_layer_ouput[0]).dot(dk)
+        
+        dj = fderv * (dk.dot(w_kj.T))
+
+        self.grads[0] = 1/samples*(X.T.dot(dj))
+        
 
 
     def zero_grad(self) -> None:
