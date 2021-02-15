@@ -38,6 +38,16 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
 
 
 
+def softmax(z):
+    #print(np.sum(np.exp(z)))
+    return np.exp(z) / np.exp(z).sum(axis=1, keepdims=True)
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+
+
+
 class SoftmaxModel:
 
     def __init__(self,
@@ -58,13 +68,19 @@ class SoftmaxModel:
         # A hidden layer with 64 neurons and a output layer with 10 neurons.
         self.neurons_per_layer = neurons_per_layer
 
+
         # Initialize the weights
         self.ws = []
         prev = self.I
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
             print("Initializing weight to shape:", w_shape)
-            w = np.zeros(w_shape)
+            #w = np.zeros(w_shape)
+            # task 2c - randomly sampled weights
+            if use_improved_weight_init:
+                w = np.random.normal(0, 1/np.sqrt(prev), w_shape)
+            else:
+                w = np.random.uniform(-1, 1, w_shape)
             self.ws.append(w)
             prev = size
         self.grads = [None for i in range(len(self.ws))]
@@ -76,29 +92,9 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        # TODO implement this function (Task 2b)
-        # HINT: For peforming the backward pass, you can save intermediate activations in varialbes in the forward pass.
-        # such as self.hidden_layer_ouput = ...
-
-        # sigmoid activation for the first layers
-        self.hidden_layer_ouput[0] = 1/(1+np.exp(np.transpose(-self.ws[0]).dot(X.T)))
-        #self.hidden_layer_ouput[0] = 1/(1+np.exp(-X.dot(self.ws[0])))
-        #print(f' HLO_0 = {self.hidden_layer_ouput[0].shape}')
-
-        # softmax activation for the last hidden layer
-        self.hidden_layer_ouput[1] = np.divide(np.exp(self.hidden_layer_ouput[0].T.dot(self.ws[1])),np.transpose(np.array([np.sum(np.exp(self.hidden_layer_ouput[0].T.dot(self.ws[1])), axis=1)])))
-        
-        #print(self.ws[1].shape, self.hidden_layer_ouput[0].shape)
-
-        #zk = self.hidden_layer_ouput[0].T.dot(self.ws[1])
-        #self.hidden_layer_ouput[1] = (np.exp(zk) / np.sum(zk))
-        #print(self.hidden_layer_ouput[1].shape)
-
-        #print(f'HLO_1 = {self.hidden_layer_ouput[1].shape}')
-
-
-
-        return self.hidden_layer_ouput[1]
+        self.hidden_layer_ouput = sigmoid(self.ws[0].T.dot(X.T))
+        y = softmax(self.hidden_layer_ouput.T.dot(self.ws[1]))
+        return y
 
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
@@ -111,37 +107,17 @@ class SoftmaxModel:
             outputs: outputs of model of shape: [batch size, num_outputs]
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
-        # TODO implement this function (Task 2b)
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-        # A list of gradients.
-        # For example, self.grads[0] will be the gradient for the first hidden layer
-        """
-        self.grads = []
-        self.grads.append(np.zeros((785, 64)))
-        self.grads.append(np.zeros((64, 10)))
 
-        for i, (grad, w) in enumerate(zip(self.grads, self.ws)):
-            assert grad.shape == w.shape,\
-                f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
-        
-        self.grads[1] = (1 / targets.shape[0])*(np.transpose(self.hidden_layer_ouput).dot(-(targets - outputs)))
-        self.grads[0] = (1 / targets.shape[0])*(np.transpose(X).dot(-(targets - outputs)))
-        """
-        samples = targets.shape[0]
-        w_ji = self.ws[0]
-        w_kj = self.ws[1]
-        zj = X.dot(w_ji)
-        dk = -(targets-outputs)
-        fderv = (1/(1+np.exp(-zj))*(1-1/(1+np.exp(-zj))))
 
-        #print(self.hidden_layer_ouput[1].T.shape, dk.shape)
-        
-        self.grads[1] = 1/samples*(self.hidden_layer_ouput[0]).dot(dk)
-        
-        dj = fderv * (dk.dot(w_kj.T))
 
-        self.grads[0] = 1/samples*(X.T.dot(dj))
+        fderv = sigmoid(X.dot(self.ws[0]))*(1-sigmoid(X.dot(self.ws[0])))
+        dk = -(targets-outputs)        
+        dj = fderv * (dk.dot(self.ws[1].T))
+
+        self.grads[1] = 1/targets.shape[0]*(self.hidden_layer_ouput).dot(dk)
+        self.grads[0] = 1/targets.shape[0]*(X.T.dot(dj))
         
 
 
@@ -214,7 +190,7 @@ if __name__ == "__main__":
 
     neurons_per_layer = [64, 10]
     use_improved_sigmoid = False
-    use_improved_weight_init = False
+    use_improved_weight_init = True
     model = SoftmaxModel(
         neurons_per_layer, use_improved_sigmoid, use_improved_weight_init)
 
