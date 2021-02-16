@@ -54,8 +54,12 @@ class SoftmaxTrainer(BaseTrainer):
         
         # update weights
         #self.model.ws = self.model.w - self.learning_rate*self.model.grad
-        self.model.ws[0] = self.model.ws[0] - self.learning_rate*self.model.grads[0]
-        self.model.ws[1] = self.model.ws[1] - self.learning_rate*self.model.grads[1]
+        if(self.use_momentum):
+            self.model.ws[0] = self.model.ws[0] - self.learning_rate*self.model.grads[0]
+            self.model.ws[1] = self.model.ws[1] - self.learning_rate*self.model.grads[1]
+        else:
+            self.model.ws[0] = self.model.ws[0] - self.learning_rate*self.model.grads[0]
+            self.model.ws[1] = self.model.ws[1] - self.learning_rate*self.model.grads[1]
         loss = cross_entropy_loss(Y_batch, logits)
         return loss
 

@@ -45,6 +45,9 @@ def softmax(z):
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
+def improved_sigmoid(z):
+    return 1.7159*np.tanh((2/3)*z)
+
 
 
 
@@ -92,7 +95,10 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        self.hidden_layer_ouput = sigmoid(self.ws[0].T.dot(X.T))
+        if self.use_improved_sigmoid:
+            self.hidden_layer_ouput = improved_sigmoid(self.ws[0].T.dot(X.T))
+        else:
+            self.hidden_layer_ouput = sigmoid(self.ws[0].T.dot(X.T))
         y = softmax(self.hidden_layer_ouput.T.dot(self.ws[1]))
         return y
 
@@ -111,8 +117,11 @@ class SoftmaxModel:
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
 
+        if(self.use_improved_sigmoid):
+            fderv = 1.14393/(np.cosh((2/3)*X.dot(self.ws[0]))**2)
+        else:
+            fderv = sigmoid(X.dot(self.ws[0]))*(1-sigmoid(X.dot(self.ws[0])))
 
-        fderv = sigmoid(X.dot(self.ws[0]))*(1-sigmoid(X.dot(self.ws[0])))
         dk = -(targets-outputs)        
         dj = fderv * (dk.dot(self.ws[1].T))
 
@@ -189,7 +198,7 @@ if __name__ == "__main__":
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
 
     neurons_per_layer = [64, 10]
-    use_improved_sigmoid = False
+    use_improved_sigmoid = True
     use_improved_weight_init = True
     model = SoftmaxModel(
         neurons_per_layer, use_improved_sigmoid, use_improved_weight_init)
