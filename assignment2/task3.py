@@ -1,7 +1,7 @@
 import utils
 import matplotlib.pyplot as plt
-from task2a import pre_process_images, one_hot_encode, SoftmaxModel
-from task2 import SoftmaxTrainer
+from task2a import pre_process_images, one_hot_encode, SoftmaxModel, cross_entropy_loss
+from task2 import SoftmaxTrainer, calculate_accuracy
 
 
 if __name__ == "__main__":
@@ -24,6 +24,7 @@ if __name__ == "__main__":
     Y_train = one_hot_encode(Y_train, 10)
     Y_val = one_hot_encode(Y_val, 10)
 
+    print("Training standard model:\n")
     model = SoftmaxModel(
         neurons_per_layer,
         use_improved_sigmoid,
@@ -35,11 +36,21 @@ if __name__ == "__main__":
     )
     train_history, val_history = trainer.train(num_epochs)
 
+    print("Final Train Cross Entropy Loss:",
+        cross_entropy_loss(Y_train, model.forward(X_train)))
+    print("Final Validation Cross Entropy Loss:",
+        cross_entropy_loss(Y_val, model.forward(X_val)))
+    print("Train accuracy:", calculate_accuracy(X_train, Y_train, model))
+    print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model))
+    print("\n\n")
+
     # Example created in assignment text - Comparing with and without shuffling.
     # YOU CAN DELETE EVERYTHING BELOW!
 
     # model with improved sigmoid
     use_improved_sigmoid = True
+
+    print("Training model with improved sigmoid:\n")
 
     model_is = SoftmaxModel(
         neurons_per_layer,
@@ -52,8 +63,18 @@ if __name__ == "__main__":
     )
     train_history_is, val_history_is = trainer_is.train(num_epochs)
 
+    print("Final Train Cross Entropy Loss:",
+        cross_entropy_loss(Y_train, model_is.forward(X_train)))
+    print("Final Validation Cross Entropy Loss:",
+        cross_entropy_loss(Y_val, model_is.forward(X_val)))
+    print("Train accuracy:", calculate_accuracy(X_train, Y_train, model_is))
+    print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model_is))
+    print("\n\n")
+
     # model with improved weight init
     use_improved_weight_init = True
+
+    print("Training model with improved weight init:\n")
     
     model_iw = SoftmaxModel(
         neurons_per_layer,
@@ -66,10 +87,20 @@ if __name__ == "__main__":
     )
     train_history_iw, val_history_iw = trainer_iw.train(num_epochs)
 
+    print("Final Train Cross Entropy Loss:",
+        cross_entropy_loss(Y_train, model_iw.forward(X_train)))
+    print("Final Validation Cross Entropy Loss:",
+        cross_entropy_loss(Y_val, model_iw.forward(X_val)))
+    print("Train accuracy:", calculate_accuracy(X_train, Y_train, model_iw))
+    print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model_iw))
+    print("\n\n")
+    
+
     # model with momentum
     use_momentum = True
     learning_rate = 0.02
 
+    print("Training model with momentum:\n")
     model_um = SoftmaxModel(
         neurons_per_layer,
         use_improved_sigmoid,
@@ -80,6 +111,14 @@ if __name__ == "__main__":
         X_train, Y_train, X_val, Y_val,
     )
     train_history_um, val_history_um = trainer_um.train(num_epochs)
+
+    print("Final Train Cross Entropy Loss:",
+        cross_entropy_loss(Y_train, model_um.forward(X_train)))
+    print("Final Validation Cross Entropy Loss:",
+        cross_entropy_loss(Y_val, model_um.forward(X_val)))
+    print("Train accuracy:", calculate_accuracy(X_train, Y_train, model_um))
+    print("Validation accuracy:", calculate_accuracy(X_val, Y_val, model_um))
+    print("\n\n")
 
     # plotting the comparison
     plt.figure(figsize=(20, 12))
