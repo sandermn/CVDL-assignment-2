@@ -64,12 +64,13 @@ class SoftmaxModel:
         # Define number of input nodes
         self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
-        self.hidden_layer_ouput = [None, None]
 
         # Define number of output nodes
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
         # A hidden layer with 64 neurons and a output layer with 10 neurons.
         self.neurons_per_layer = neurons_per_layer
+
+        self.hidden_layer_output = [None for i in range(len(neurons_per_layer))]
 
 
         # Initialize the weights
@@ -95,11 +96,12 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        if self.use_improved_sigmoid:
-            self.hidden_layer_ouput = improved_sigmoid(self.ws[0].T.dot(X.T))
-        else:
-            self.hidden_layer_ouput = sigmoid(self.ws[0].T.dot(X.T))
-        y = softmax(self.hidden_layer_ouput.T.dot(self.ws[1]))
+        for i in range(len(self.neurons_per_layer), -1):
+            if self.use_improved_sigmoid:
+                self.hidden_layer_ouput[i] = improved_sigmoid(self.ws[i].T.dot(X.T))
+            else:
+                self.hidden_layer_ouput[i] = sigmoid(self.ws[i].T.dot(X.T))
+            y = softmax(self.hidden_layer_ouput.T.dot(self.ws[1]))
         return y
 
 
@@ -127,6 +129,7 @@ class SoftmaxModel:
 
         self.grads[1] = 1/targets.shape[0]*(self.hidden_layer_ouput).dot(dk)
         self.grads[0] = 1/targets.shape[0]*(X.T.dot(dj))
+
         
 
 
@@ -172,7 +175,7 @@ def gradient_approximation_test(
                 # Actual gradient
                 logits = model.forward(X)
                 model.backward(X, logits, Y)
-                print(f'lidx={layer_idx}, i={i}, j={j}')
+                #print(f'lidx={layer_idx}, i={i}, j={j}')
                 difference = gradient_approximation - \
                     model.grads[layer_idx][i, j]
                 assert abs(difference) <= epsilon**2,\
