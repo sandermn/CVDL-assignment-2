@@ -54,12 +54,12 @@ class SoftmaxTrainer(BaseTrainer):
         
         # update weights
         #self.model.ws = self.model.w - self.learning_rate*self.model.grad
-        if(self.use_momentum):
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate*self.model.grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate*self.model.grads[1]
-        else:
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate*self.model.grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate*self.model.grads[1]
+        for i in range(len(self.model.ws)):
+            if(self.use_momentum):
+                self.model.ws[i] = self.model.ws[i] - (self.learning_rate * self.model.grads[i] + self.momentum_gamma * self.previous_grads[i] *self.learning_rate)
+                self.previous_grads[i] = self.model.grads[i] + self.previous_grads[i]* self.momentum_gamma
+            else:
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.model.grads[i]
         loss = cross_entropy_loss(Y_batch, logits)
         return loss
 
@@ -100,6 +100,9 @@ if __name__ == "__main__":
     use_improved_sigmoid = False
     use_improved_weight_init = False
     use_momentum = False
+
+    if use_momentum:
+        learning_rate = 0.02
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()

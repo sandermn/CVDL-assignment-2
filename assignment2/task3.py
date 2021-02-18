@@ -37,6 +37,84 @@ if __name__ == "__main__":
 
     # Example created in assignment text - Comparing with and without shuffling.
     # YOU CAN DELETE EVERYTHING BELOW!
+
+    # model with improved sigmoid
+    use_improved_sigmoid = True
+
+    model_is = SoftmaxModel(
+        neurons_per_layer,
+        use_improved_sigmoid,
+        use_improved_weight_init)
+    trainer_is = SoftmaxTrainer(
+        momentum_gamma, use_momentum,
+        model_is, learning_rate, batch_size, shuffle_data,
+        X_train, Y_train, X_val, Y_val,
+    )
+    train_history_is, val_history_is = trainer_is.train(num_epochs)
+
+    # model with improved weight init
+    use_improved_weight_init = True
+    
+    model_iw = SoftmaxModel(
+        neurons_per_layer,
+        use_improved_sigmoid,
+        use_improved_weight_init)
+    trainer_iw = SoftmaxTrainer(
+        momentum_gamma, use_momentum,
+        model_iw, learning_rate, batch_size, shuffle_data,
+        X_train, Y_train, X_val, Y_val,
+    )
+    train_history_iw, val_history_iw = trainer_iw.train(num_epochs)
+
+    # model with momentum
+    use_momentum = True
+    learning_rate = 0.02
+
+    model_um = SoftmaxModel(
+        neurons_per_layer,
+        use_improved_sigmoid,
+        use_improved_weight_init)
+    trainer_um = SoftmaxTrainer(
+        momentum_gamma, use_momentum,
+        model_um, learning_rate, batch_size, shuffle_data,
+        X_train, Y_train, X_val, Y_val,
+    )
+    train_history_um, val_history_um = trainer_um.train(num_epochs)
+
+    # plotting the comparison
+    plt.figure(figsize=(20, 12))
+    plt.subplot(1, 2, 1)
+    plt.ylim([0, .5])
+    utils.plot_loss(train_history["loss"], "Task 3 Model", npoints_to_average=10)
+    utils.plot_loss(train_history_is["loss"], "Task 3 Model - with improved sigmoid", npoints_to_average=10)
+    utils.plot_loss(train_history_iw["loss"], "Task 3 Model - with improved weight init", npoints_to_average=10)
+    utils.plot_loss(train_history_um["loss"], "Task 3 Model - with momentum", npoints_to_average=10)
+    plt.legend()
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Cross Entropy Loss - Average")
+
+    plt.subplot(1, 2, 2)
+    plt.ylim([0.85, .99])
+    utils.plot_loss(val_history["accuracy"], "Task 3 Model")
+    utils.plot_loss(val_history_is["accuracy"], "Task 3 Model - with improved sigmoid", npoints_to_average=10)
+    utils.plot_loss(val_history_iw["accuracy"], "Task 3 Model - with improved weight init", npoints_to_average=10)
+    utils.plot_loss(val_history_um["accuracy"], "Task 3 Model - with momentum", npoints_to_average=10)
+    plt.xlabel("Number of Training Steps")
+    plt.ylabel("Validation accuracy")
+    plt.legend()
+    plt.savefig("task3_loss_and_val.png")
+
+
+
+
+
+
+
+
+
+
+
+    """
     shuffle_data = False
     model_no_shuffle = SoftmaxModel(
         neurons_per_layer,
@@ -65,3 +143,4 @@ if __name__ == "__main__":
     plt.ylabel("Validation Accuracy")
     plt.legend()
     plt.show()
+    """
