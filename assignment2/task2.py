@@ -3,6 +3,7 @@ import utils
 import matplotlib.pyplot as plt
 from task2a import cross_entropy_loss, SoftmaxModel, one_hot_encode, pre_process_images
 from trainer import BaseTrainer
+
 np.random.seed(0)
 
 
@@ -16,7 +17,10 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
         Accuracy (float)
     """
     # TODO: Implement this function (copy from last assignment)
-    accuracy = 0
+    accuracy = 0.0
+    logits = model.forward(X)
+    logits_max, targets_max = np.argmax(logits, axis=1), np.argmax(targets, axis=1)
+    accuracy = (1 / targets.shape[0]) * np.sum([(1 if l == t else 0) for (l, t) in zip(logits_max, targets_max)])
     return accuracy
 
 
@@ -39,7 +43,6 @@ class SoftmaxTrainer(BaseTrainer):
         Perform forward, backward and gradient descent step here.
         The function is called once for every batch (see trainer.py) to perform the train step.
         The function returns the mean loss value which is then automatically logged in our variable self.train_history.
-
         Args:
             X: one batch of images
             Y: one batch of labels
@@ -48,10 +51,37 @@ class SoftmaxTrainer(BaseTrainer):
         """
         # TODO: Implement this function (task 2c)
 
-        loss = 0
+        logits = self.model.forward(X_batch)
+        self.model.backward(X_batch, logits, Y_batch)
+        model.backward(X_batch, logits, Y_batch)
 
-        loss = cross_entropy_loss(Y_batch, logits)  # sol
+        # update weights
+        # self.model.ws = self.model.w - self.learning_rate*self.model.grad
+        n = len(self.model.ws)
+        for i in range(n):
+            if self.use_momentum:
+                self.model.ws[i] = self.model.ws[i] - (self.learning_rate * self.model.grads[i] + self.momentum_gamma * self.previous_grads[i] *self.learning_rate)
+                self.previous_grads[i] = self.model.grads[i] + self.previous_grads[i]* self.momentum_gamma
+            else:
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.model.grads[i]
+            '''
+            
+             if (self.use_momentum):
+               
+                self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.model.grads[0]
+                self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.model.grads[1]
+              
 
+               
+
+
+
+            else:
+                self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.model.grads[0]
+                self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.model.grads[1]
+            
+        '''
+        loss = cross_entropy_loss(Y_batch, logits)
         return loss
 
     def validation_step(self):
@@ -80,16 +110,17 @@ class SoftmaxTrainer(BaseTrainer):
 if __name__ == "__main__":
     # hyperparameters DO NOT CHANGE IF NOT SPECIFIED IN ASSIGNMENT TEXT
     num_epochs = 50
-    learning_rate = .1
+    learning_rate = .02
+    #learning_rate = .1
     batch_size = 32
     neurons_per_layer = [64, 10]
     momentum_gamma = .9  # Task 3 hyperparameter
     shuffle_data = True
 
     # Settings for task 3. Keep all to false for task 2.
-    use_improved_sigmoid = False
-    use_improved_weight_init = False
-    use_momentum = False
+    use_improved_sigmoid = True
+    use_improved_weight_init =True
+    use_momentum = True
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
