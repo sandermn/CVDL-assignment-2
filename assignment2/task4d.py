@@ -8,7 +8,7 @@ if __name__ == "__main__":
     num_epochs = 50
     learning_rate = .02
     batch_size = 32
-    neurons_per_layer = [32, 32, 10]
+    neurons_per_layer = [60, 60, 10]
     momentum_gamma = .9  
     shuffle_data = True
 
